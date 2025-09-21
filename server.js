@@ -1,9 +1,10 @@
-import express from 'express';
-import cors from 'cors';
-import { Client } from 'pg';
 import dns from 'dns';
 dns.setDefaultResultOrder('ipv4first');
 
+import express from 'express';
+import cors from 'cors';
+import pkg from 'pg';
+const { Client } = pkg;
 
 const app = express();
 app.use(cors());
@@ -18,11 +19,9 @@ const client = new Client({
   ssl: { rejectUnauthorized: false }
 });
 
-// Connect once at startup
 await client.connect();
 console.log('Connected to Supabase!');
 
-// GET /products - fetch all products
 app.get('/products', async (req, res) => {
   try {
     const result = await client.query('SELECT * FROM public.products ORDER BY id ASC');
@@ -33,20 +32,5 @@ app.get('/products', async (req, res) => {
   }
 });
 
-// POST /products - insert a product
-app.post('/products', async (req, res) => {
-  const { name, description, price, image_url } = req.body;
-  try {
-    const result = await client.query(
-      'INSERT INTO public.products (name, description, price, image_url) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, description, price, image_url]
-    );
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to insert product' });
-  }
-});
-
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
